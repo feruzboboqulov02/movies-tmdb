@@ -1,5 +1,3 @@
-// src/scheduler/scheduler.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { TmdbService } from '../tmdb/tmdb.service';
