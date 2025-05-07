@@ -114,8 +114,46 @@ export class MoviesController {
   }
 
   @Post()
-  createMovie(@Body() movie: Movie) {
-    return this.moviesService.createMovie(movie);
+  async createMovie(@Body() movie: Partial<Movie>) {
+    if (!movie) {
+      throw new BadRequestException('Movie data is required');
+    }
+    
+    if (!movie.Title) {
+      throw new BadRequestException('Movie title is required');
+    }
+    
+    // Ensure all required fields have at least default values
+    const completeMovie: Movie = {
+      Title: movie.Title,
+      Year: movie.Year || 'N/A',
+      Rated: movie.Rated || 'N/A',
+      Released: movie.Released || 'N/A',
+      Runtime: movie.Runtime || 'N/A',
+      Genre: movie.Genre || 'N/A',
+      Director: movie.Director || 'N/A',
+      Writer: movie.Writer || 'N/A',
+      Actors: movie.Actors || 'N/A',
+      Plot: movie.Plot || 'N/A',
+      Language: movie.Language || 'N/A',
+      Country: movie.Country || 'N/A',
+      Awards: movie.Awards || 'N/A',
+      Poster: movie.Poster || 'N/A',
+      Metascore: movie.Metascore || 'N/A',
+      imdbRating: movie.imdbRating || 'N/A',
+      imdbVotes: movie.imdbVotes || 'N/A',
+      imdbID: movie.imdbID || `tmdb-${Date.now()}`, // Generate a unique ID if none provided
+      Type: movie.Type || 'movie',
+      Response: movie.Response || 'True',
+      Images: movie.Images || [],
+    };
+    
+    try {
+      const createdMovie = await this.moviesService.createMovie(completeMovie);
+      return createdMovie;
+    } catch (error) {
+      throw new BadRequestException(`Failed to create movie: ${error.message}`);
+    }
   }
 
   @Put(':title')

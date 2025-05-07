@@ -67,14 +67,38 @@ export class MoviesService {
   }
 
   async createMovie(movie: Movie): Promise<Movie> {
-    const newMovie = {
-      ...movie,
-      Title: movie.Title,
-    } as Movie;
-    
-    this.movies.push(newMovie);
-    await this.saveMovies();
-    return newMovie;
+    try {
+      if (!movie) {
+        throw new Error('Movie object is required');
+      }
+      
+      if (!movie.Title) {
+        throw new Error('Movie title is required');
+      }
+      
+      // Check if movie with this title already exists
+      const existingMovie = this.movies.find(m => m.Title === movie.Title);
+      if (existingMovie) {
+        this.logger.warn(`Movie with title '${movie.Title}' already exists, returning existing movie`);
+        return existingMovie;
+      }
+      
+      // Create a new movie object with the provided data
+      const newMovie: Movie = {
+        ...movie,
+        // Ensure Title is set
+        Title: movie.Title,
+      };
+      
+      this.movies.push(newMovie);
+      await this.saveMovies();
+      
+      this.logger.log(`Created new movie: ${newMovie.Title}`);
+      return newMovie;
+    } catch (error) {
+      this.logger.error(`Error creating movie: ${error.message}`);
+      throw error;
+    }
   }
 
   getMovieByTitle(title: string): Movie | undefined {
