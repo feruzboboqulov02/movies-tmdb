@@ -41,27 +41,21 @@ export class MoviesController {
 
   @Get('title/:title')
   async getMovieByTitle(@Param('title') title: string): Promise<Movie> {
-    // First try to get the movie from our local database
     const movie = this.moviesService.getMovieByTitle(title);
     
     if (movie) {
       return movie;
     }
     
-    // If not found locally, try to fetch it from TMDB API
     try {
-      // Search for the movie by title
       const searchResult = await this.tmdbService.searchMovies(title, 1);
       
       if (searchResult && searchResult.results && searchResult.results.length > 0) {
-        // Get the first matching movie
         const tmdbMovie = searchResult.results[0];
         
-        // Get detailed information about the movie
         const movieDetails = await this.tmdbService.getMovieById(String(tmdbMovie.id));
         
         if (movieDetails) {
-          // Create a new movie object with the data from TMDB
           const newMovie: Movie = {
             Title: movieDetails.title,
             Year: new Date(movieDetails.release_date).getFullYear().toString(),
@@ -86,7 +80,6 @@ export class MoviesController {
             Images: []
           };
           
-          // Save the new movie to our database
           await this.moviesService.createMovie(newMovie);
           
           return newMovie;
