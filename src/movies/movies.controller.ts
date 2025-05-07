@@ -8,6 +8,8 @@ import {
   Delete,
   Param,
   Query,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { TmdbService } from 'src/tmdb/tmdb.service';
 import { TmdbMovieResponse, TmdbMovieDetails } from 'src/tmdb/tmdb.service';
@@ -37,26 +39,28 @@ export class MoviesController {
     return await this.tmdbService.searchMovies(query, page);
   }
 
-  @Get(':title')
-  getMoviByTitle(@Param('title') title: string): Movie | undefined {
-    console.log('GetMovieByTitle -> title', title);
-
-    return this.moviesService.getMovieByTitle(title);
+  @Get('title/:title')
+  getMovieByTitle(@Param('title') title: string): Movie | undefined {
+    const movie = this.moviesService.getMovieByTitle(title);
+    if (!movie) {
+      throw new NotFoundException(`Movie with title '${title}' not found`);
+    }
+    return movie;
   }
 
-  @Get(':id')
+  @Get('id/:id')
   async getMovieDetails(@Param('id') id: string): Promise<TmdbMovieDetails> {
     try {
       const movieDetails = await this.tmdbService.getMovieById(id);
       if (!movieDetails) {
-        throw new Error('Movie not found');
+        throw new NotFoundException(`Movie with ID '${id}' not found`);
       }
       return movieDetails;
     } catch (error) {
       if (error instanceof NotFoundError) {
-        throw new Error(`Failed to get movie details: ${error.message}`);
+        throw new NotFoundException(`Failed to get movie details: ${error.message}`);
       }
-      throw new Error(`Failed to get movie details: `);
+      throw new BadRequestException(`Failed to get movie details`);
     }
   }
 
@@ -66,17 +70,29 @@ export class MoviesController {
   }
 
   @Put(':title')
-  updateMovieByTitle(@Body() title: string, @Body() movie: Movie) {
-    return this.moviesService.updateMovieByTitle(title, movie);
+  updateMovieByTitle(@Param('title') title: string, @Body() movie: Movie) {
+    const updatedMovie = this.moviesService.updateMovieByTitle(title, movie);
+    if (!updatedMovie) {
+      throw new NotFoundException(`Movie with title '${title}' not found`);
+    }
+    return updatedMovie;
   }
 
   @Patch(':title')
-  patchMovieByTitle(@Body() title: string, @Body() movie: Partial<Movie>) {
-    return this.moviesService.patchMovieByTitle(title, movie);
+  patchMovieByTitle(@Param('title') title: string, @Body() movie: Partial<Movie>) {
+    const updatedMovie = this.moviesService.patchMovieByTitle(title, movie);
+    if (!updatedMovie) {
+      throw new NotFoundException(`Movie with title '${title}' not found`);
+    }
+    return updatedMovie;
   }
 
   @Delete(':title')
-  deleteMovieByTitle(@Body() title: string) {
-    return this.moviesService.deleteMovieByTitle(title);
+  deleteMovieByTitle(@Param('title') title: string) {
+    const deleted = this.moviesService.deleteMovieByTitle(title);
+    if (!deleted) {
+      throw new NotFoundException(`Movie with title '${title}' not found`);
+    }
+    return { message: `Movie with title '${title}' successfully deleted` };
   }
 }
