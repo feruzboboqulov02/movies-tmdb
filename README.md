@@ -2,34 +2,49 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  <img src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg" width="200" alt="TMDB Logo" />
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+
+<h1 align="center">Movie Database API</h1>
+
+<p align="center">A NestJS application that provides movie information using The Movie Database (TMDB) API with local caching.</p>
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This project is a movie database API built with NestJS that allows users to:
+
+- Search for movies by title
+- Get detailed information about specific movies
+- Store movie data locally for faster access
+- Automatically update movie information daily using a scheduler
+
+The application uses The Movie Database (TMDB) API as a data source and implements local caching to improve performance and reduce external API calls.
 
 ## Project setup
+
+### Installation
 
 ```bash
 $ npm install
 ```
+
+### Environment Configuration
+
+Before running the application, you need to set up your environment variables:
+
+1. Create a `.env` file in the project root directory
+2. Use the `.env.sample` file as a reference
+3. Add your TMDB API credentials (API_KEY and READ_ACCESS_TOKEN)
+
+Example `.env` file:
+```
+READ_ACCESS_TOKEN=your_tmdb_read_access_token
+API_KEY=your_tmdb_api_key
+TMDB_API=https://api.themoviedb.org/3
+```
+
+> **Note:** You need to register for a TMDB account and generate API credentials at [https://www.themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)
 
 ## Compile and run the project
 
@@ -44,6 +59,28 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+Once the application is running, you can access the API at `http://localhost:3000`.
+
+## API Endpoints
+
+### Movies
+
+- `GET /movies/popular` - Get popular movies
+- `GET /movies/search?query=<title>&page=<pageNumber>` - Search for movies by title
+- `GET /movies/title/:title` - Get movie by title (from local DB or TMDB if not found locally)
+- `GET /movies/id/:id` - Get movie details by TMDB ID
+- `POST /movies` - Create a new movie in the local database
+- `PUT /movies/:title` - Update a movie by title
+- `PATCH /movies/:title` - Partially update a movie by title
+- `DELETE /movies/:title` - Delete a movie by title
+
+## Features
+
+- **Movie Search**: Search for movies using the TMDB API
+- **Local Database**: Store movie information in a local JSON file
+- **Automatic Updates**: Daily scheduled updates of movie information
+- **Fallback Mechanism**: If a movie isn't found locally, it's fetched from TMDB
+
 ## Run tests
 
 ```bash
@@ -57,42 +94,59 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Deployment
+## Project Structure
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```
+├── src/
+│   ├── app/               # Application module
+│   ├── movies/            # Movies module (controller, service)
+│   ├── tmdb/              # TMDB API integration
+│   ├── scheduler/         # Scheduled tasks
+│   └── main.ts            # Application entry point
+├── .env.sample           # Sample environment variables
+├── db.json               # Local database file
+└── README.md             # Project documentation
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Architecture
+
+The application follows a modular architecture with clear separation of concerns:
+
+- **MoviesModule**: Handles movie-related operations and local database interactions
+- **TmdbModule**: Manages communication with the TMDB API
+- **SchedulerModule**: Runs scheduled tasks to update movie information
+
+## Deployment
+
+This application can be deployed using standard NestJS deployment practices. For more information, see the [NestJS deployment documentation](https://docs.nestjs.com/deployment).
 
 ## Resources
 
-Check out a few resources that may come in handy when working with NestJS:
+### Project Resources
+- [TMDB API Documentation](https://developer.themoviedb.org/reference/intro/getting-started)
+- [NestJS Documentation](https://docs.nestjs.com)
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### NestJS Resources
+- [NestJS Discord Channel](https://discord.gg/G7Qnnhy) - For questions and support
+- [NestJS Courses](https://courses.nestjs.com/) - Official video courses
+- [NestJS Devtools](https://devtools.nestjs.com) - Visualize your application graph
 
-## Support
+## Troubleshooting
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Common Issues
 
-## Stay in touch
+1. **API Key Issues**: If you encounter authentication errors, verify your TMDB API credentials in the `.env` file.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+2. **Database File**: If the `db.json` file is not created automatically, the application will create it on first run. Ensure the directory has write permissions.
+
+3. **Dependency Injection Errors**: If you encounter dependency injection errors, make sure all modules are properly exported and imported.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is [MIT licensed](LICENSE).
+
+## Acknowledgements
+
+- Built with [NestJS](https://nestjs.com/)
+- Movie data provided by [The Movie Database (TMDB)](https://www.themoviedb.org/)
+- This product uses the TMDB API but is not endorsed or certified by TMDB.
