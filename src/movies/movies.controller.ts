@@ -40,12 +40,66 @@ export class MoviesController {
   }
 
   @Get('title/:title')
-  getMovieByTitle(@Param('title') title: string): Movie | undefined {
+  async getMovieByTitle(@Param('title') title: string): Promise<Movie> {
+    // First try to get the movie from our local database
     const movie = this.moviesService.getMovieByTitle(title);
-    if (!movie) {
-      throw new NotFoundException(`Movie with title '${title}' not found`);
+    
+    if (movie) {
+      return movie;
     }
-    return movie;
+    
+    // If not found locally, try to fetch it from TMDB API
+    try {
+      // Search for the movie by title
+      const searchResult = await this.tmdbService.searchMovies(title, 1);
+      
+      if (searchResult && searchResult.results && searchResult.results.length > 0) {
+        // Get the first matching movie
+        const tmdbMovie = searchResult.results[0];
+        
+        // Get detailed information about the movie
+        const movieDetails = await this.tmdbService.getMovieById(String(tmdbMovie.id));
+        
+        if (movieDetails) {
+          // Create a new movie object with the data from TMDB
+          const newMovie: Movie = {
+            Title: movieDetails.title,
+            Year: new Date(movieDetails.release_date).getFullYear().toString(),
+            Rated: movieDetails.rating || 'N/A',
+            Released: movieDetails.release_date,
+            Runtime: movieDetails.runtime ? `${movieDetails.runtime} min` : 'N/A',
+            Genre: movieDetails.genres?.map(g => g.name).join(', ') || 'N/A',
+            Director: 'N/A',
+            Writer: 'N/A',
+            Actors: 'N/A',
+            Plot: movieDetails.overview || 'N/A',
+            Language: 'N/A',
+            Country: 'N/A',
+            Awards: 'N/A',
+            Poster: movieDetails.poster_path ? `https://image.tmdb.org/t/p/w500${movieDetails.poster_path}` : 'N/A',
+            Metascore: 'N/A',
+            imdbRating: movieDetails.popularity?.toString() || 'N/A',
+            imdbVotes: 'N/A',
+            imdbID: String(movieDetails.id),
+            Type: 'movie',
+            Response: 'True',
+            Images: []
+          };
+          
+          // Save the new movie to our database
+          await this.moviesService.createMovie(newMovie);
+          
+          return newMovie;
+        }
+      }
+      
+      throw new NotFoundException(`Movie with title '${title}' not found in local database or TMDB`);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(`Error fetching movie from TMDB: ${error.message}`);
+    }
   }
 
   @Get('id/:id')
@@ -58,7 +112,9 @@ export class MoviesController {
       return movieDetails;
     } catch (error) {
       if (error instanceof NotFoundError) {
-        throw new NotFoundException(`Failed to get movie details: ${error.message}`);
+        throw new NotFoundException(
+          `Failed to get movie details: ${error.message}`,
+        );
       }
       throw new BadRequestException(`Failed to get movie details`);
     }
@@ -79,7 +135,10 @@ export class MoviesController {
   }
 
   @Patch(':title')
-  patchMovieByTitle(@Param('title') title: string, @Body() movie: Partial<Movie>) {
+  patchMovieByTitle(
+    @Param('title') title: string,
+    @Body() movie: Partial<Movie>,
+  ) {
     const updatedMovie = this.moviesService.patchMovieByTitle(title, movie);
     if (!updatedMovie) {
       throw new NotFoundException(`Movie with title '${title}' not found`);
